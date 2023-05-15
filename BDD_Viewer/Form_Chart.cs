@@ -71,9 +71,6 @@ namespace BDD_Viewer
 
             for(int i=0; i< data.Rows.Count; i++)
             {
-                string tst = data.Rows[i][col_name].ToString();//.Replace('.', ',');
-                double tst_double = 3;
-                Double.TryParse(tst,out tst_double);
                 Double.TryParse(data.Rows[i][col_name].ToString(), out yAxis[index][i]);
             }
         }
@@ -92,26 +89,13 @@ namespace BDD_Viewer
 
         private void Form_Chart_Load(object sender, EventArgs e)
         {
-            /*// create data sample data
-            DateTime[] myDates = new DateTime[100];
-            for (int i = 0; i < myDates.Length; i++)
-                myDates[i] = new DateTime(1985, 9, 24).AddDays(7 * i);
-
-            // Convert DateTime[] to double[] before plotting
-            double[] xs = myDates.Select(x => x.ToOADate()).ToArray();
-            double[] ys = DataGen.RandomWalk(myDates.Length);
-
-            formsPlot1.Plot.AddScatter(xs, ys);
-            formsPlot1.Plot.XAxis.DateTimeFormat(true);
-            formsPlot1.Update();
-            formsPlot1.Refresh();*/
 
             foreach(Thread th in list_Thread)
             {
                 th.Join();
             }
             
-            listBox_Y.SelectedIndex = 0;
+            //listBox_Y.SelectedIndex = 0;
 
             listBox_Y.Enabled = true;
         }

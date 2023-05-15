@@ -1,6 +1,9 @@
 NAME=TEST
 DB_PATH=C:\Users\nicol\Documents\Dev\Base_de_donnees\TEST.FDB
 
+NAME=OCEANO_TEST
+DB_PATH=C:\Users\nicol\Documents\Dev\Base_de_donnees\OCEANO_TEST.FDB
+
 NAME=OCEANO_EMPTY
 DB_PATH=C:\Users\nicol\Documents\Dev\Base_de_donnees\OCEANO_EMPTY.FDB
 
@@ -21,3 +24,6 @@ DB_PATH=C:\Users\nicol\Documents\Dev\Projets\BDD_Viewer\BDD_Viewer\bin\Debug\191
 
 NAME=PDG_NRL_OCEANO
 DB_PATH=C:\Users\nicol\Desktop\NRL_BDD\PDG_OCEANO.FDB
+
+NAME=HYDRO_TEST_DETECTIONS
+DB_PATH=C:\Users\nicol\Desktop\Hydro\HYDRO_DATA_M.FDB

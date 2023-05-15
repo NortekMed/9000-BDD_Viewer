@@ -422,6 +422,16 @@ namespace BDD_Viewer
 
                     button_GetData_Click(null,null);
                     button_Export_to_CSV_Click(null,null);
+
+                    if (current_DataTable.DefaultView.Count != 0)
+                    {
+                        string chart_name = listBox_Databases.SelectedItem.ToString() + "-" + listBox_Tables.SelectedItem.ToString() + "-" + "FROM_" + dateTimePicker_From.Value.ToString("yyyy-MM-dd") + "-" + "TO_" + dateTimePicker_To.Value.ToString("yyyy-MM-dd");
+
+                        Form_Chart new_chart = new Form_Chart(current_DataTable, chart_name, textBox_Xaxis.Text);
+                        new_chart.Show();
+                    }
+
+
                 }
             }
         }
