@@ -290,7 +290,7 @@ namespace BDD_Viewer
                 lst_data.Add(new List<string>());
             }
 
-            StreamWriter sw = new StreamWriter(path+filename+".txt", false);
+            StreamWriter sw = new StreamWriter(path+filename+".csv", false);
 
             sw.WriteLine(header);
 
