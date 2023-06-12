@@ -111,26 +111,30 @@ namespace BDD_Viewer
 
         private void listBox_Y_SelectedIndexChanged(object sender, EventArgs e)
         {
-            formsPlot1.Plot.Clear();
-            MyScatterPlot = formsPlot1.Plot.AddScatter(xAxis_DateTime, yAxis[listBox_Y.SelectedIndex], label: listBox_Y.SelectedItem.ToString());
-            formsPlot1.Plot.XAxis.DateTimeFormat(true);
+            if(listBox_Y.SelectedIndex != -1)
+            {
+                formsPlot1.Plot.Clear();
 
-            formsPlot1.Plot.Title(listBox_Y.SelectedItem.ToString() + " --- " + this.Text);
-            formsPlot1.Plot.XLabel(this.label2.Text);
-            formsPlot1.Plot.YLabel(listBox_Y.SelectedItem.ToString());
-            formsPlot1.Plot.Legend();
+                MyScatterPlot = formsPlot1.Plot.AddScatter(xAxis_DateTime, yAxis[listBox_Y.SelectedIndex], label: listBox_Y.SelectedItem.ToString());
+                formsPlot1.Plot.XAxis.DateTimeFormat(true);
 
-            // Add a red circle we can move around later as a highlighted point indicator
-            HighlightedPoint = formsPlot1.Plot.AddPoint(0, 0);
-            HighlightedPoint.Color = Color.Red;
-            HighlightedPoint.MarkerSize = 10;
-            HighlightedPoint.MarkerShape = ScottPlot.MarkerShape.openCircle;
-            HighlightedPoint.IsVisible = false;
+                formsPlot1.Plot.Title(listBox_Y.SelectedItem.ToString() + " --- " + this.Text);
+                formsPlot1.Plot.XLabel(this.label2.Text);
+                formsPlot1.Plot.YLabel(listBox_Y.SelectedItem.ToString());
+                formsPlot1.Plot.Legend();
 
-            formsPlot1.Update();
-            formsPlot1.Refresh();
+                // Add a red circle we can move around later as a highlighted point indicator
+                HighlightedPoint = formsPlot1.Plot.AddPoint(0, 0);
+                HighlightedPoint.Color = Color.Red;
+                HighlightedPoint.MarkerSize = 10;
+                HighlightedPoint.MarkerShape = ScottPlot.MarkerShape.openCircle;
+                HighlightedPoint.IsVisible = false;
 
-            button1.Enabled= true;
+                formsPlot1.Update();
+                formsPlot1.Refresh();
+
+                button1.Enabled = true;
+            }
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -176,7 +180,7 @@ namespace BDD_Viewer
             {
                 LastHighlightedIndex = pointIndex;
                 formsPlot1.Plot.Remove(last_tooltip);
-                last_tooltip = formsPlot1.Plot.AddTooltip(yAxis[listBox_Y.SelectedIndex][pointIndex].ToString(), pointX,pointY);
+                last_tooltip = formsPlot1.Plot.AddTooltip(DateTime.FromOADate(xAxis_DateTime[pointIndex]).ToString() + "\n" + yAxis[listBox_Y.SelectedIndex][pointIndex].ToString(), pointX,pointY);
                 formsPlot1.Render();
             }
         }
