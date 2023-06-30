@@ -123,6 +123,18 @@ namespace BDD_Viewer
                 formsPlot1.Plot.YLabel(listBox_Y.SelectedItem.ToString());
                 formsPlot1.Plot.Legend();
 
+                if(listBox_Y.SelectedItem.ToString() == "HEADING")
+                {
+                    // Si tracé de HEADING : changement d'échelle. Min = 0 ; Max = 360
+                    formsPlot1.Plot.SetAxisLimits(null, null, 0, 360);
+                }
+                else if(listBox_Y.SelectedItem.ToString() == "BATTERY")
+                {
+                    // Si tracé d'une tension batterie : changement d'échelle. Min = 0
+                    formsPlot1.Plot.SetAxisLimits(null, null, 0, null);
+                }
+
+
                 // Add a red circle we can move around later as a highlighted point indicator
                 HighlightedPoint = formsPlot1.Plot.AddPoint(0, 0);
                 HighlightedPoint.Color = Color.Red;

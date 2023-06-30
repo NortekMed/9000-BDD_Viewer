@@ -1,5 +1,3 @@
-
-
 NAME=TEST
 DB_PATH=C:\Users\nicol\Documents\Dev\Base_de_donnees\TEST.FDB
 
@@ -38,9 +36,3 @@ DB_PATH=C:\Users\nicol\Documents\Dev\Base_de_donnees\CLIENTS_SITE.FDB
 
 NAME=OCEANO_EMPTY_MODEMsss
 DB_PATH=C:\Users\nicol\Documents\Dev\Base_de_donnees\OCEANO_EMPTY_MODEM.FDB
-
-NAME=1911_ABIDJAN_C8
-DB_PATH=D:\1911_ABIDJAN_C8.FDB
-
-NAME=1911_ABIDJAN_C8ee
-DB_PATH=D:\1911_ABIDJAN_C8.FDB

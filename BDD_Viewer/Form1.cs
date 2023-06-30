@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -14,7 +15,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using FirebirdSql.Data.FirebirdClient;
-using static System.Windows.Forms.AxHost;
 
 namespace BDD_Viewer
 {
@@ -23,6 +23,8 @@ namespace BDD_Viewer
         static CultureInfo ci;
 
         static List<DB> DB_List = new List<DB>();
+
+        static List<DB> Full_DB_List = new List<DB>();
 
         public static DB current_DB = new DB();
 
@@ -33,6 +35,43 @@ namespace BDD_Viewer
             InitializeComponent();
 
             progressBar_ExportCSV.Value= 0;
+
+            // Lecture du fichier Config
+            Load_Config_File();
+
+            //Init DateTimePicker Date
+            dateTimePicker_From.Format = DateTimePickerFormat.Custom;
+            dateTimePicker_From.CustomFormat = "dddd dd MMMM yyyy,   HH : mm : ss";
+            DateTime start = DateTime.UtcNow.AddMonths(-6);
+
+            start = start.AddHours(-start.Hour);
+            start = start.AddMinutes(-start.Minute);
+            start = start.AddSeconds(-start.Second);
+
+            dateTimePicker_From.Value = start;
+
+            dateTimePicker_To.Format = DateTimePickerFormat.Custom;
+            dateTimePicker_To.CustomFormat = "dddd dd MMMM yyyy,   HH : mm : ss";
+            DateTime end = DateTime.UtcNow;
+
+            end = end.AddHours(23 - end.Hour);
+            end = end.AddMinutes(59 - end.Minute);
+            end = end.AddSeconds(59 - end.Second);
+
+            dateTimePicker_To.Value = end;
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Load_Config_File()
+        {
+            DB_List.Clear();
+            listBox_Databases.Items.Clear();
+            listBox_Columns.Items.Clear();
+            listBox_Tables.Items.Clear();
 
             //Read Config Liste BDD
             StreamReader conf = new StreamReader("Liste_BDD.txt");
@@ -106,51 +145,64 @@ namespace BDD_Viewer
                 DB_List.Add(Current_DB);
             }
 
-            for(int i=0; i< DB_List.Count; i++)
-            {
-                DB_List[i].set_FbConnection();
-                listBox_Databases.Items.Add(DB_List[i].Name);
-            }
+            // Tri par ordre alphabétique
+            DB_List.Sort((x, y) => string.Compare(x.Name, y.Name));
 
-            //Init DateTimePicker Date
-            dateTimePicker_From.Value = DateTime.UtcNow.AddMonths(-6);
-            dateTimePicker_To.Value = DateTime.UtcNow;
+            Full_DB_List = new List<DB> ( DB_List );
+
+            Update_listBox_Databases(DB_List);
+
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void Update_listBox_Databases(List<DB> list_DB)
         {
+            listBox_Databases.Items.Clear();
 
+            DB_List = list_DB;
+
+            for (int i = 0; i < list_DB.Count; i++)
+            {
+                list_DB[i].set_FbConnection();
+                listBox_Databases.Items.Add(list_DB[i].Name);
+            }
         }
 
         private void listBox_Databases_SelectedIndexChanged(object sender, EventArgs e)
         {
             int index = listBox_Databases.SelectedIndex;
-            current_DB = DB_List[index];
-
-            label_Path_Current_DB.Text = current_DB.Path;
-
-            //Nettoie les listBox inférieures
-            listBox_Columns.Items.Clear();
-            listBox_Tables.Items.Clear();
-
-            //Ouvre la connexion à la BDD
-            current_DB.databaseconnnection.Open();
-
-            DataSet ds = new DataSet();
-            FbDataAdapter dataAdapter = new FbDataAdapter("SELECT a.RDB$RELATION_NAME" +
-                                                         " FROM RDB$RELATIONS a" +
-                                                         " WHERE COALESCE(RDB$SYSTEM_FLAG, 0) = 0 AND RDB$RELATION_TYPE = 0", current_DB.databaseconnnection);
-
-            dataAdapter.Fill(ds);
-            DataTable myDataTable = ds.Tables[0];
-
-            //Ferme la connextion à la BDD
-            current_DB.databaseconnnection.Close();
-
-            foreach (DataRow dRow in myDataTable.Rows)
+            if(index >= 0)
             {
-                string Table_Name = dRow[0].ToString().Replace(" ","");
-                listBox_Tables.Items.Add(Table_Name);
+                current_DB = DB_List[index];
+
+                label_Path_Current_DB.Text = current_DB.Path;
+
+                //Nettoie les listBox inférieures
+                listBox_Columns.Items.Clear();
+                listBox_Tables.Items.Clear();
+
+                //Ouvre la connexion à la BDD
+                try
+                {
+                    current_DB.databaseconnnection.Open();
+
+                    DataSet ds = new DataSet();
+                    FbDataAdapter dataAdapter = new FbDataAdapter("SELECT a.RDB$RELATION_NAME" +
+                                                                 " FROM RDB$RELATIONS a" +
+                                                                 " WHERE COALESCE(RDB$SYSTEM_FLAG, 0) = 0 AND RDB$RELATION_TYPE = 0", current_DB.databaseconnnection);
+
+                    dataAdapter.Fill(ds);
+                    DataTable myDataTable = ds.Tables[0];
+
+                    //Ferme la connextion à la BDD
+                    current_DB.databaseconnnection.Close();
+
+                    foreach (DataRow dRow in myDataTable.Rows)
+                    {
+                        string Table_Name = dRow[0].ToString().Replace(" ", "");
+                        listBox_Tables.Items.Add(Table_Name);
+                    }
+
+                }catch (Exception ex) { MessageBox.Show(ex.Message, "Erreur"); }
             }
         }
 
@@ -204,6 +256,20 @@ namespace BDD_Viewer
             }
             else { button_FastChart.Enabled = false; }
 
+            //Activation du bouton Ajout BDD
+            if (textBox_New_DB_Name.Text == "" || textBox_New_DB_Path.Text == "")
+            {
+                button_Add_DB.Enabled = false;
+            }
+            else { button_Add_DB.Enabled = true; }
+
+            // Activation du bouton Effacer BDD
+            if (listBox_Databases.SelectedItems.Count > 0)
+            {
+                button_Delete_DB.Enabled = true;
+            }
+            else { button_Delete_DB.Enabled= false; }
+
         }
 
         private void button_GetData_Click(object sender, EventArgs e)
@@ -228,7 +294,7 @@ namespace BDD_Viewer
             //Retire la dernière virgule
             cmd = cmd.Remove(cmd.Length - 2);
 
-            string timestampsrequest = " WHERE a.TIME_REC>='" + dateTimePicker_From.Value.ToString("dd.MM.yyyy , 00:00:00") + "' and a.TIME_REC<='" + dateTimePicker_To.Value.ToString("dd.MM.yyyy , 23:59:59") + "'";
+            string timestampsrequest = " WHERE a.TIME_REC>='" + dateTimePicker_From.Value.ToString("dd.MM.yyyy , HH:mm:ss") + "' and a.TIME_REC<='" + dateTimePicker_To.Value.ToString("dd.MM.yyyy , HH:mm:ss") + "'";
 
             string source = " FROM " + listBox_Tables.SelectedItem.ToString() + " a";
 
@@ -448,6 +514,168 @@ namespace BDD_Viewer
                 Form_Chart test = new Form_Chart(current_DataTable, chart_name, textBox_Xaxis.Text);
                 test.Show();
             }
+        }
+
+        private void button_24H_Click(object sender, EventArgs e)
+        {
+            this.dateTimePicker_From.Value = DateTime.Now.AddHours(-24).AddHours(-DateTimeOffset.Now.Offset.TotalHours);
+            this.dateTimePicker_To.Value = DateTime.Now.AddHours(-DateTimeOffset.Now.Offset.TotalHours);
+        }
+
+        private void button_7Days_Click(object sender, EventArgs e)
+        {
+            this.dateTimePicker_From.Value = DateTime.Now.AddDays(-7).AddHours(-DateTimeOffset.Now.Offset.TotalHours);
+            this.dateTimePicker_To.Value = DateTime.Now.AddHours(-DateTimeOffset.Now.Offset.TotalHours);
+        }
+
+        private void button_6Months_Click(object sender, EventArgs e)
+        {
+            this.dateTimePicker_From.Value = DateTime.Now.AddMonths(-6).AddHours(-DateTimeOffset.Now.Offset.TotalHours);
+            this.dateTimePicker_To.Value = DateTime.Now.AddHours(-DateTimeOffset.Now.Offset.TotalHours);
+        }
+
+        private void textBox_New_DB_Path_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button_Browse_DB_Path_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog fileDialog = new OpenFileDialog();
+            string exe_path = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            fileDialog.InitialDirectory = exe_path.Remove(exe_path.LastIndexOf("\\"));
+            fileDialog.Filter = "BDD (*.FDB)|*.FDB|Tout (*.*)|*.*";
+            fileDialog.RestoreDirectory = true;
+
+            string filePath = String.Empty;
+
+            if (fileDialog.ShowDialog() == DialogResult.OK)
+            {
+                //Get the path of specified file
+                textBox_New_DB_Path.Text = fileDialog.FileName;
+
+                if(textBox_New_DB_Name.Text == "")
+                {
+                    string db_name = fileDialog.FileName.Remove(0, fileDialog.FileName.LastIndexOf("\\") + 1);
+                    db_name = db_name.Remove(db_name.LastIndexOf("."));
+
+                    textBox_New_DB_Name.Text = db_name;
+                }
+            }
+        }
+
+        private void button_Add_DB_Click(object sender, EventArgs e)
+        {
+            // Vérification que le nom n'existe pas déjà
+            bool already_exists = false;
+
+            for(int i =0; i< DB_List.Count; i++)
+            {
+                if (DB_List[i].Name == textBox_New_DB_Name.Text)
+                {
+                    already_exists = true;
+                }
+            }
+
+            if (textBox_New_DB_Name.Text == "")
+            {
+                MessageBox.Show("Le nom de la base de données ne peut pas être nul.", "Erreur");
+                return;
+            }
+            else if (already_exists)
+            {
+                MessageBox.Show("Ce nom de base de données existe déjà.", "Erreur");
+                return;
+            }
+            else if (textBox_New_DB_Path.Text == "")
+            {
+                MessageBox.Show("Veuillez rentrer un chemin d'acces.", "Erreur");
+                return;
+            }
+
+            File.AppendAllText("Liste_BDD.txt", Environment.NewLine + Environment.NewLine + "NAME=" + textBox_New_DB_Name.Text + Environment.NewLine + "DB_PATH=" + textBox_New_DB_Path.Text);
+
+            textBox_New_DB_Name.Text = "";
+            textBox_New_DB_Path.Text = "";
+
+            Load_Config_File();
+        }
+
+        private void button_Delete_DB_Click(object sender, EventArgs e)
+        {
+            DialogResult dialogResult = MessageBox.Show("Supprimer définitivement " + current_DB.Name + " ?", "Confirmation", MessageBoxButtons.YesNo);
+            if (dialogResult == DialogResult.Yes)
+            {
+                string Config_Text = File.ReadAllText("Liste_BDD.txt");
+                string db_name = current_DB.Name;
+                File.Delete("Liste_BDD.txt");
+                string[] lines = Config_Text.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+                for (int i = 0; i < lines.Count(); i++)
+                {
+                    if (lines[i] == "") { continue; }
+
+                    if (lines[i].Contains(listBox_Databases.SelectedItem.ToString()))
+                    {
+                        i++; //Suppression Name
+                        i++; // Suppression Path
+                    }
+                    else
+                    {
+                        string new_lines = "";
+                        if (lines[i].Contains("NAME="))
+                        {
+                            new_lines = Environment.NewLine + Environment.NewLine;
+                        }
+                        else if (lines[i].Contains("DB_PATH=")) { new_lines = Environment.NewLine; }
+
+                        File.AppendAllText("Liste_BDD.txt", new_lines + lines[i]);
+                    }
+                }
+
+                Load_Config_File();
+            }
+
+        }
+
+        private void textBox_SearchBar_TextChanged(object sender, EventArgs e)
+        {
+            DB_List.Clear();
+
+            foreach(DB bdd in Full_DB_List)
+            {
+                if ( bdd.Name.IndexOf(textBox_SearchBar.Text, StringComparison.OrdinalIgnoreCase) >= 0 )
+                {
+                    DB_List.Add(bdd);
+                }
+            }
+
+            Update_listBox_Databases(DB_List);
+        }
+
+        private void Form1_DragDrop(object sender, DragEventArgs e)
+        {
+            string[] fileList = (string[])e.Data.GetData(DataFormats.FileDrop, false);
+
+            if(fileList.Count() >= 1)
+            {
+                textBox_New_DB_Path.Text = fileList[0];
+
+                string db_name = fileList[0].Remove(0, fileList[0].LastIndexOf("\\") + 1);
+                db_name = db_name.Remove(db_name.LastIndexOf("."));
+
+                textBox_New_DB_Name.Text = db_name;
+            }
+
+        }
+
+        private void Form1_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.Copy;
+        }
+
+        private void button_Open_CSV_Folder_Click(object sender, EventArgs e)
+        {
+            Process.Start(@".\CSV");
         }
     }
 
